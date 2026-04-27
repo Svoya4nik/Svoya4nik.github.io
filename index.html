@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Score Board Pro Max</title>
+    <title>Score Board Ultimate</title>
     <style>
         :root {
             --bg-color: #f0f2f5;
             --sidebar-bg: #ffffff;
             --card-bg: #ffffff;
+            --text-color: #000000;
             --border-color: #000000;
             --green: #2ecc71;
             --red: #e74c3c;
@@ -18,12 +19,23 @@
             --poop: #8b4513;
         }
 
+        /* Темная тема */
+        body.dark-theme {
+            --bg-color: #1a1a1a;
+            --sidebar-bg: #2d2d2d;
+            --card-bg: #333333;
+            --text-color: #ffffff;
+            --border-color: #555555;
+        }
+
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             display: flex;
             background-color: var(--bg-color);
+            color: var(--text-color);
             height: 100vh;
+            transition: background 0.3s;
         }
 
         /* Боковая панель */
@@ -35,23 +47,28 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+            gap: 15px;
             z-index: 100;
             overflow-y: auto;
         }
 
-        .section-title { font-weight: bold; font-size: 14px; margin-bottom: 8px; display: block; border-bottom: 1px solid #ddd; padding-top: 10px;}
+        .section-title { font-weight: bold; font-size: 14px; margin-bottom: 5px; display: block; border-bottom: 1px solid #ddd; padding-top: 10px;}
 
         .multiplier-group { display: flex; gap: 5px; }
         .m-btn { flex: 1; padding: 10px; border: 1px solid #ccc; background: #fff; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .m-btn.active { background: #3498db; color: white; border-color: #3498db; }
 
         .custom-scores { display: flex; flex-wrap: wrap; gap: 5px; }
-        .custom-scores input { width: 40px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
+        .custom-scores input { width: 40px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center; background: white; color: black; }
         
-        .add-player-btn { background: var(--green); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .tg-btn { background: #0088cc; color: white; text-decoration: none; text-align: center; padding: 12px; border-radius: 6px; font-weight: bold; margin-top: auto; }
+        .action-btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; color: white; }
+        .add-player-btn { background: var(--green); }
+        .theme-btn { background: #555; margin-top: 10px; }
+        .tg-btn { background: #0088cc; text-decoration: none; text-align: center; padding: 12px; border-radius: 6px; font-weight: bold; margin-top: auto; color: white; }
+
+        /* Переключатель сортировки */
+        .sort-toggle { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: bold; }
+        input[type="checkbox"] { cursor: pointer; width: 18px; height: 18px; }
 
         /* Сетка карточек */
         .main-content {
@@ -59,9 +76,9 @@
             padding: 25px;
             overflow-y: auto;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Карточки стали больше */
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             grid-auto-rows: min-content;
-            gap: 25px;
+            gap: 30px;
             align-content: flex-start;
         }
 
@@ -73,49 +90,50 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            transition: all 0.3s ease;
-            min-height: 500px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-height: 520px;
         }
 
-        /* Свечение для лидеров */
-        .card-1 { border-color: var(--gold); box-shadow: 0 0 25px var(--gold); background: linear-gradient(180deg, #fffbeb 0%, #fff 100%); }
-        .card-2 { border-color: var(--silver); box-shadow: 0 0 20px var(--silver); }
-        .card-3 { border-color: var(--bronze); box-shadow: 0 0 15px var(--bronze); }
-        .card-last { border-color: var(--poop); box-shadow: 0 0 15px rgba(139, 69, 19, 0.3); }
+        /* УСИЛЕННОЕ СВЕЧЕНИЕ И ЦВЕТ КАРТОЧЕК */
+        .card-1 { border-color: var(--gold); box-shadow: 0 0 40px var(--gold); background: #fffdf0 !important; }
+        body.dark-theme .card-1 { background: #443d1a !important; }
 
-        .rank-icon { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: 32px; z-index: 10; }
+        .card-2 { border-color: var(--silver); box-shadow: 0 0 30px var(--silver); background: #f5f5f5 !important; }
+        body.dark-theme .card-2 { background: #3d3d3d !important; }
 
-        .card-header {
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            border-bottom: 2px solid var(--border-color);
-        }
-        .nickname-input { border: none; background: transparent; font-weight: bold; font-size: 20px; width: 100%; text-align: center; outline: none; }
+        .card-3 { border-color: var(--bronze); box-shadow: 0 0 25px var(--bronze); background: #fff5ed !important; }
+        body.dark-theme .card-3 { background: #3d332a !important; }
+
+        .card-last { border-color: var(--poop); box-shadow: 0 0 20px rgba(139, 69, 19, 0.5); background: #fdf5f2 !important; }
+        body.dark-theme .card-last { background: #2a221d !important; }
+
+        .rank-icon { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 36px; z-index: 10; filter: drop-shadow(0 0 5px rgba(0,0,0,0.3)); }
+
+        .card-header { padding: 15px; display: flex; align-items: center; border-bottom: 2px solid var(--border-color); }
+        .nickname-input { border: none; background: transparent; font-weight: bold; font-size: 20px; width: 100%; text-align: center; outline: none; color: inherit; }
         .del-btn { color: var(--red); background: none; border: none; cursor: pointer; font-size: 22px; }
 
         .buttons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
-        .score-btn { padding: 14px; border: 1px solid var(--border-color); border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .score-btn { padding: 14px; border: 1px solid var(--border-color); border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.1s; }
+        .score-btn:active { transform: scale(0.9); }
         .plus { background: #e8f5e9; color: #2e7d32; }
         .minus { background: #ffebee; color: #c62828; }
 
-        /* Быстрое добавление в карточке */
         .quick-add { padding: 0 15px 15px; display: flex; gap: 5px; }
-        .quick-add input { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
-        .quick-add-btn { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
+        .quick-add input { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; background: white; color: black; }
 
-        .balance-sec { text-align: center; padding: 15px; border-top: 2px solid var(--border-color); background: rgba(255,255,255,0.5); }
+        .balance-sec { text-align: center; padding: 15px; border-top: 2px solid var(--border-color); background: rgba(0,0,0,0.05); }
         .balance-val { font-size: 36px; font-weight: bold; }
 
         .history-sec { padding: 15px; border-top: 1px solid #ddd; height: 140px; display: flex; flex-direction: column; }
-        .history-log { flex-grow: 1; overflow-y: auto; font-size: 14px; background: rgba(255,255,255,0.8); padding: 8px; border: 1px solid #eee; }
-        .log-p { color: var(--green); }
-        .log-m { color: var(--red); }
+        .history-log { flex-grow: 1; overflow-y: auto; font-size: 14px; background: rgba(255,255,255,0.1); padding: 8px; border: 1px solid rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
+        <button class="action-btn theme-btn" onclick="toggleTheme()">🌓 ТЕМА</button>
+        
         <div>
             <span class="section-title">ИЗМ. БАЛ</span>
             <div class="multiplier-group">
@@ -136,7 +154,14 @@
             </div>
         </div>
 
-        <button class="add-player-btn" onclick="addPlayer()">+ ДОБАВИТЬ ИГРОКА</button>
+        <div>
+            <span class="section-title">ОПЦИИ</span>
+            <label class="sort-toggle">
+                <input type="checkbox" id="sortEnabled" onchange="renderBoard()"> Сортировать
+            </label>
+        </div>
+
+        <button class="action-btn add-player-btn" onclick="addPlayer()">+ ДОБАВИТЬ ИГРОКА</button>
         
         <a href="https://t.me/ТВОЙ_КАНАЛ" target="_blank" class="tg-btn">МОЙ ТЕЛЕГРАМ</a>
     </div>
@@ -147,6 +172,10 @@
         let multiplier = 1;
         let players = [];
 
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+        }
+
         function setMult(val, btn) {
             multiplier = val;
             document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active'));
@@ -154,8 +183,7 @@
         }
 
         function addPlayer() {
-            const id = Date.now();
-            players.push({ id, name: "Игрок", score: 0, history: [] });
+            players.push({ id: Date.now(), name: "Игрок", score: 0, history: [] });
             renderBoard();
         }
 
@@ -175,9 +203,10 @@
             const player = players.find(p => p.id === id);
             const change = baseVal * multiplier * (isPlus ? 1 : -1);
             player.score += change;
-            
-            const logEntry = `${isPlus ? '+' : '-'}${baseVal}${multiplier > 1 ? ' (x'+multiplier+')' : ''} = ${change > 0 ? '+' : ''}${change}`;
-            player.history.unshift({ text: logEntry, type: isPlus ? 'p' : 'm' });
+            player.history.unshift({ 
+                text: `${isPlus ? '+' : '-'}${baseVal}${multiplier > 1 ? ' (x'+multiplier+')' : ''} = ${change > 0 ? '+' : ''}${change}`, 
+                type: isPlus ? 'p' : 'm' 
+            });
             renderBoard();
         }
 
@@ -190,15 +219,19 @@
 
         function renderBoard() {
             const container = document.getElementById('board');
-            const inputs = document.getElementById('btnSettings').querySelectorAll('input');
-            const btnValues = Array.from(inputs).map(i => parseInt(i.value) || 0);
+            const btnValues = Array.from(document.getElementById('btnSettings').querySelectorAll('input')).map(i => parseInt(i.value) || 0);
+            const isSortEnabled = document.getElementById('sortEnabled').checked;
 
-            const sorted = [...players].sort((a, b) => b.score - a.score);
-            
-            container.innerHTML = players.map(p => {
-                const rank = sorted.indexOf(p) + 1;
-                let rankClass = '';
-                let icon = '';
+            let displayPlayers = [...players];
+            const sortedByScore = [...players].sort((a, b) => b.score - a.score);
+
+            if (isSortEnabled) {
+                displayPlayers = sortedByScore;
+            }
+
+            container.innerHTML = displayPlayers.map(p => {
+                const rank = sortedByScore.indexOf(p) + 1;
+                let rankClass = ''; let icon = '';
 
                 if (players.length > 1) {
                     if (rank === 1) { rankClass = 'card-1'; icon = '<div class="rank-icon">👑</div>'; }
@@ -220,13 +253,11 @@
                             <button class="score-btn minus" onclick="changeScore(${p.id}, ${v}, false)">-${v}</button>
                         `).join('')}
                     </div>
-                    
                     <div class="quick-add">
                         <input type="number" id="quick-val-${p.id}" placeholder="Своё число">
-                        <button class="quick-add-btn" style="background:var(--green)" onclick="quickChange(${p.id}, true)">+</button>
-                        <button class="quick-add-btn" style="background:var(--red)" onclick="quickChange(${p.id}, false)">-</button>
+                        <button class="m-btn" style="background:var(--green);color:white;border:none" onclick="quickChange(${p.id}, true)">+</button>
+                        <button class="m-btn" style="background:var(--red);color:white;border:none" onclick="quickChange(${p.id}, false)">-</button>
                     </div>
-
                     <div class="balance-sec">
                         <small>БАЛАНС</small><br>
                         <div class="balance-val">${p.score}</div>
@@ -234,11 +265,10 @@
                     <div class="history-sec">
                         <small>ИСТОРИЯ</small>
                         <div class="history-log">
-                            ${p.history.map(h => `<div class="log-${h.type}">${h.text}</div>`).join('')}
+                            ${p.history.map(h => `<div style="color: ${h.type === 'p' ? 'var(--green)' : 'var(--red)'}">${h.text}</div>`).join('')}
                         </div>
                     </div>
-                </div>
-                `;
+                </div>`;
             }).join('');
         }
     </script>

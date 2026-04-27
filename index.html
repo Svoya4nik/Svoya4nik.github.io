@@ -3,139 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Score Counter</title>
+    <title>Игра: Подсчёт баллов</title>
     <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --sidebar-bg: #e0e0e0;
+            --card-bg: #fff;
+            --text-color: #333;
+            --border-color: #ccc;
+            --green: #4caf50;
+            --red: #f44336;
+            --blue: #2196f3;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
+            margin: 0;
+            display: flex;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+        }
+
+        /* Боковая панель */
+        .sidebar {
+            width: 150px;
+            background-color: var(--sidebar-bg);
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 20px;
+            gap: 15px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
         }
-        .controls {
-            margin-bottom: 30px;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        input, button {
+
+        .settings-block, .add-player-block {
+            border: 1px solid var(--border-color);
+            background: white;
             padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #333;
-            background: #2a2a2a;
-            color: white;
-            margin: 5px;
-        }
-        button {
-            cursor: pointer;
-            background: #3d5afe;
-            border: none;
-            transition: 0.2s;
-        }
-        button:hover {
-            background: #536dfe;
-        }
-        .player-card {
-            background: #1e1e1e;
-            padding: 15px;
-            margin: 10px;
             border-radius: 8px;
+            text-align: center;
+        }
+
+        .multiplier-btn {
             width: 100%;
-            max-width: 500px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 5px solid #3d5afe;
-        }
-        .player-info {
-            flex-grow: 1;
-        }
-        .score {
-            font-size: 24px;
+            padding: 10px;
+            margin-bottom: 5px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
             font-weight: bold;
-            color: #00e676;
-            margin-right: 20px;
         }
-        .btn-group button {
-            padding: 5px 10px;
-            font-size: 12px;
-            background: #424242;
+        .multiplier-btn:hover, .multiplier-btn.active {
+            background: var(--blue);
+            color: white;
+            border-color: var(--blue);
         }
-        .btn-group button:hover {
-            background: #616161;
+
+        .sidebar-input {
+            width: 90%;
+            padding: 8px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
         }
+
+        .add-btn {
+            background: var(--green);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+        .add-btn:hover { background: #43a047; }
+
+        /* Основная область с игроками */
+        .main-content {
+            margin-left: 190px; /* Отступ под боковую панель */
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            flex-grow: 1;
+            overflow-x: auto; /* Горизонтальный скролл, если много игроков */
+        }
+
+        /* Карточка игрока (колонка) */
+        .player-card {
+            background-color: var(--card-bg);
+            border: 2px solid #000;
+            border-radius: 10px;
+            width: 180px;
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Шапка с никнеймом и кнопкой удаления */
+        .card-header {
+            border-bottom: 2px solid #000;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            position: relative;
+        }
+        .delete-player-btn {
+            position: absolute;
+            top: 2px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: var(--red);
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 0;
+            opacity: 0.7;
+        }
+        .delete-player-btn:hover { opacity: 1; }
+
+        /* Контейнер кнопок */
+        .score-buttons-container {
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+
+        .score-btn {
+            padding: 15px 5px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .score-btn:active { transform: scale(0.95); }
+
+        .btn-plus { background: #e8f5e9; color: var(--green); }
+        .btn-plus:hover { background: #c8e6c9; }
+        .btn-minus { background: #ffebee; color: var(--red); }
+        .btn-minus:hover { background: #ffcdd2; }
+
+        /* Нижняя часть: Баланс и История */
+        .card-footer {
+            margin-top: auto;
+            border-top: 2px solid #000;
+            background: #fafafa;
+        }
+
+        .balance-info {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 2px solid #000;
+        }
+        .balance-label { font-size: 1.2em; font-weight: bold; display: block;}
+        .current-score { font-size: 1.5em; font-weight: bold; color: #000; }
+
+        .history-info {
+            padding: 10px;
+        }
+        .history-label { font-weight: bold; display: block; margin-bottom: 5px; text-align: center;}
+        .history-log {
+            height: 100px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            color: #555;
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .log-entry.plus { color: var(--green); }
+        .log-entry.minus { color: var(--red); }
+
     </style>
 </head>
 <body>
 
-    <h2>Таблица баллов</h2>
+    <div class="sidebar">
+        <div class="settings-block">
+            <strong>ИЗМ. БАЛ</strong>
+            <button class="multiplier-btn active" onclick="setMultiplier(1, this)">1X</button>
+            <button class="multiplier-btn" onclick="setMultiplier(2, this)">2X</button>
+            <button class="multiplier-btn" onclick="setMultiplier(3, this)">3X</button>
+        </div>
 
-    <div class="controls">
-        <input type="text" id="playerName" placeholder="Имя игрока">
-        <button onclick="addPlayer()">Добавить игрока</button>
-        <hr style="border: 0.5px solid #333; margin: 15px 0;">
-        <div>
-            <small>Настройка кнопок баллов (через пробел):</small><br>
-            <input type="text" id="btnSettings" value="10 20 30 40 50">
-            <button onclick="updateButtons()" style="background: #ef6c00;">Обновить кнопки</button>
+        <div class="add-player-block">
+            <strong>ДОБ. ИГР.</strong>
+            <input type="text" id="playerName" class="sidebar-input" placeholder="Никнейм">
+            <button class="add-btn" onclick="addPlayer()">Добавить</button>
         </div>
     </div>
 
-    <div id="playersList"></div>
+    <div class="main-content" id="playersContainer">
+        </div>
 
     <script>
-        let scoreValues = [10, 20, 30, 40, 50];
+        // Текущий множитель
+        let currentMultiplier = 1;
 
+        // Настройка кнопок (шаг)
+        const scoreSteps = [10, 20, 30, 40, 50];
+
+        // Функция установки множителя
+        function setMultiplier(mult, btn) {
+            currentMultiplier = mult;
+            // Обновляем активную кнопку
+            document.querySelectorAll('.multiplier-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // Добавление игрока
         function addPlayer() {
             const nameInput = document.getElementById('playerName');
             const name = nameInput.value.trim();
             
-            if (name === "") return;
+            if (name === "") {
+                alert("Пожалуйста, введите никнейм!");
+                return;
+            }
 
+            // Простая защита от одинаковых имен
+            if (document.getElementById(`player-card-${name}`)) {
+                alert("Игрок с таким именем уже есть!");
+                return;
+            }
+
+            // Создаем HTML структуру карточки (колонка)
+            const playersContainer = document.getElementById('playersContainer');
             const playerCard = document.createElement('div');
             playerCard.className = 'player-card';
+            playerCard.id = `player-card-${name}`;
             
             playerCard.innerHTML = `
-                <div class="player-info">
-                    <strong>${name}</strong>
+                <div class="card-header">
+                    ${name}
+                    <button class="delete-player-btn" onclick="deletePlayer('${name}')">×</button>
                 </div>
-                <div class="score" id="score-${name}">0</div>
-                <div class="btn-group" id="btns-${name}">
-                    ${renderButtons(name)}
+                
+                <div class="score-buttons-container">
+                    ${renderScoreButtons(name)}
                 </div>
-                <button onclick="this.parentElement.remove()" style="background:#c62828; margin-left: 10px;">❌</button>
+
+                <div class="card-footer">
+                    <div class="balance-info">
+                        <span class="balance-label">БАЛАНС</span>
+                        <span class="current-score" id="score-${name}">0</span>
+                    </div>
+                    <div class="history-info">
+                        <span class="history-label">истори</span>
+                        <div class="history-log" id="log-${name}"></div>
+                    </div>
+                </div>
             `;
 
-            document.getElementById('playersList').appendChild(playerCard);
-            nameInput.value = "";
+            playersContainer.appendChild(playerCard);
+            nameInput.value = ""; // Очистить поле ввода
         }
 
-        function renderButtons(playerName) {
-            return scoreValues.map(val => 
-                `<button onclick="changeScore('${playerName}', ${val})">+${val}</button>`
-            ).join('');
-        }
-
-        function changeScore(playerName, amount) {
-            const scoreElement = document.getElementById(`score-${playerName}`);
-            let currentScore = parseInt(scoreElement.innerText);
-            scoreElement.innerText = currentScore + amount;
-        }
-
-        function updateButtons() {
-            const settings = document.getElementById('btnSettings').value;
-            scoreValues = settings.split(' ').map(Number).filter(n => !isNaN(n));
+        // Генерация кнопок + и - для игрока
+        function renderScoreButtons(playerName) {
+            let htmlPlus = '';
+            let htmlMinus = '';
             
-            // Обновляем кнопки у всех уже созданных игроков
-            const allBtnGroups = document.querySelectorAll('.btn-group');
-            allBtnGroups.forEach(group => {
-                const name = group.id.replace('btns-', '');
-                group.innerHTML = renderButtons(name);
-            });
+            // Первая колонка: +
+            for(let step of scoreSteps) {
+                htmlPlus += `<button class="score-btn btn-plus" onclick="updateScore('${playerName}', ${step}, true)">+${step}</button>`;
+                htmlMinus += `<button class="score-btn btn-minus" onclick="updateScore('${playerName}', ${step}, false)">-${step}</button>`;
+            }
+
+            return htmlPlus + htmlMinus;
         }
+
+        // Обновление счета и истории
+        function updateScore(playerName, baseAmount, isPlus) {
+            const actualAmount = baseAmount * currentMultiplier;
+            const scoreElement = document.getElementById(`score-${playerName}`);
+            const logElement = document.getElementById(`log-${playerName}`);
+            
+            let currentScore = parseInt(scoreElement.innerText);
+            
+            let operationSign = isPlus ? '+' : '-';
+            let finalChange = isPlus ? actualAmount : -actualAmount;
+            let entryClass = isPlus ? 'plus' : 'minus';
+
+            // 1. Обновляем счет
+            scoreElement.innerText = currentScore + finalChange;
+
+            // 2. Добавляем запись в историю
+            const multText = currentMultiplier > 1 ? ` (x${currentMultiplier})` : '';
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${entryClass}`;
+            logEntry.innerText = `${operationSign}${baseAmount}${multText} = ${operationSign}${actualAmount}`;
+            
+            // Добавляем запись в начало лога и прокручиваем вверх
+            logElement.prepend(logEntry);
+            logElement.scrollTop = 0;
+        }
+
+        // Удаление игрока
+        function deletePlayer(playerName) {
+            if (confirm(`Вы уверены, что хотите удалить игрока "${playerName}"?`)) {
+                const card = document.getElementById(`player-card-${playerName}`);
+                if (card) {
+                    card.remove();
+                }
+            }
+        }
+
     </script>
 </body>
 </html>
